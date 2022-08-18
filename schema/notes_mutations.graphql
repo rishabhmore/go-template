@@ -1,0 +1,5 @@
+extend type Mutation {
+    createNote(input: NotesCreateInput!): Notes!
+    updateNote(input: NotesUpdateInput): Notes!
+    deleteNote: NotesDelete
+}

@@ -31,8 +31,8 @@ require (
 	github.com/volatiletech/null/v8 v8.1.2
 	github.com/volatiletech/randomize v0.0.1
 	github.com/volatiletech/sqlboiler v3.7.1+incompatible
-	github.com/volatiletech/sqlboiler/v4 v4.8.6
-	github.com/volatiletech/strmangle v0.0.2
+	github.com/volatiletech/sqlboiler/v4 v4.12.0
+	github.com/volatiletech/strmangle v0.0.4
 	go.opentelemetry.io/contrib/instrumentation/github.com/labstack/echo/otelecho v0.33.0
 	go.opentelemetry.io/otel v1.8.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.8.0

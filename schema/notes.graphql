@@ -1,0 +1,41 @@
+"""Schema for Notes for a user"""
+type Notes {
+    id: ID!
+    userId: ID!
+    firstName: String
+    lastName: String
+    title: String
+    note: String
+    createdAt: Int
+    deletedAt: Int
+    updatedAt: Int
+}
+
+"""Get pagination details for list of notes"""
+input NotesPagination {
+    limit: Int!
+    page: Int!
+}
+
+"""Create a note for a user"""
+input NotesCreateInput {
+    title: String!
+    note: String
+}
+
+"""Update a note for a user"""
+input NotesUpdateInput {
+    title: String
+    note: String
+}
+
+"""Return a list of paginated notes"""
+type NotesPayload {
+    notes: [Notes!]!
+    total: Int!
+}
+
+"""Schema to delete a note with id"""
+type NotesDelete {
+    id: ID!
+}
