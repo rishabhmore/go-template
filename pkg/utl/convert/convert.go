@@ -133,6 +133,31 @@ func RoleToGraphqlRole(r *models.Role, count int) *graphql.Role {
 		Users:       UsersToGraphQlUsers(users, count),
 	}
 }
+
+// NoteToGraphqlNote converts slices of models.Note to graphql.Notes pointers type
+func NotesToGraphqlNotes(n models.NoteSlice) []*graphql.Notes {
+	var r []*graphql.Notes
+	for _, e := range n {
+		r = append(r, NoteToGraphqlNote(e))
+	}
+	return r
+}
+
+// NoteToGraphqlNote converts models.Note to graphql.Notes type
+func NoteToGraphqlNote(n *models.Note) *graphql.Notes {
+	return &graphql.Notes{
+		ID:        strconv.Itoa(n.ID),
+		UserID:    strconv.Itoa(NullDotIntToInt(n.UserID)),
+		FirstName: NullDotStringToPointerString(n.FirstName),
+		LastName:  NullDotStringToPointerString(n.LastName),
+		Title:     NullDotStringToPointerString(n.Title),
+		Note:      NullDotStringToPointerString(n.Note),
+		CreatedAt: NullDotTimeToPointerInt(n.CreatedAt),
+		UpdatedAt: NullDotTimeToPointerInt(n.UpdatedAt),
+		DeletedAt: NullDotTimeToPointerInt(n.DeletedAt),
+	}
+}
+
 func NullDotTimeToPointerInt(t null.Time) *int {
 	var i int
 	if t.Valid {

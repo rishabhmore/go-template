@@ -1,7 +1,7 @@
 -- +migrate Up
 CREATE TABLE public.notes (
     id SERIAL UNIQUE PRIMARY KEY,
-    user_id int REFERENCES users(id),
+    user_id int NOT NULL REFERENCES users(id),
     first_name TEXT,
     last_name TEXT,
     title TEXT,
