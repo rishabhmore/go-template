@@ -46,6 +46,48 @@ type LoginResponse struct {
 	RefreshToken string `json:"refreshToken"`
 }
 
+// Schema for Notes for a user
+type Notes struct {
+	ID        string  `json:"id"`
+	UserID    string  `json:"userId"`
+	FirstName *string `json:"firstName"`
+	LastName  *string `json:"lastName"`
+	Title     *string `json:"title"`
+	Note      *string `json:"note"`
+	CreatedAt *int    `json:"createdAt"`
+	DeletedAt *int    `json:"deletedAt"`
+	UpdatedAt *int    `json:"updatedAt"`
+}
+
+// Create a note for a user
+type NotesCreateInput struct {
+	Title string  `json:"title"`
+	Note  *string `json:"note"`
+}
+
+// Schema to delete a note with id
+type NotesDelete struct {
+	ID string `json:"id"`
+}
+
+// Get pagination details for list of notes
+type NotesPagination struct {
+	Limit int `json:"limit"`
+	Page  int `json:"page"`
+}
+
+// Return a list of paginated notes
+type NotesPayload struct {
+	Notes []*Notes `json:"notes"`
+	Total int      `json:"total"`
+}
+
+// Update a note for a user
+type NotesUpdateInput struct {
+	Title *string `json:"title"`
+	Note  *string `json:"note"`
+}
+
 type RefreshTokenResponse struct {
 	Token string `json:"token"`
 }
