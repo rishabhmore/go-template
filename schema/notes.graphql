@@ -25,6 +25,7 @@ input NotesCreateInput {
 
 """Update a note for a user"""
 input NotesUpdateInput {
+    id: ID!
     title: String
     note: String
 }

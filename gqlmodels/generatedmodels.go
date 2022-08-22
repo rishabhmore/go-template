@@ -84,6 +84,7 @@ type NotesPayload struct {
 
 // Update a note for a user
 type NotesUpdateInput struct {
+	ID    string  `json:"id"`
 	Title *string `json:"title"`
 	Note  *string `json:"note"`
 }

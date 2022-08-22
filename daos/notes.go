@@ -3,6 +3,7 @@ package daos
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"go-template/models"
 
@@ -19,6 +20,14 @@ func FindNoteById(noteId int, ctx context.Context) (*models.Note, error) {
 // Get all the notes with a count
 func GetNotesWithCount(queryMods []qm.QueryMod, ctx context.Context) (models.NoteSlice, int64, error) {
 	contextExecutor := getContextExecutor(nil)
+	// Modify our base querymods to include sorting based on
+	queryMods = append(
+		queryMods,
+		// 1. we make sure we don't get notes which are deleted
+		qm.Where(fmt.Sprintf("%s=?", models.NoteColumns.DeletedAt), nil),
+		// 2. we order the notes based on Updated at time
+		qm.OrderBy(fmt.Sprintf("%s=?", models.NoteColumns.UpdatedAt)),
+	)
 	notes, err := models.Notes(queryMods...).All(ctx, contextExecutor)
 	if err != nil {
 		return models.NoteSlice{}, 0, err
@@ -37,8 +46,8 @@ func CreateNoteTx(note models.Note, ctx context.Context, tx *sql.Tx) (models.Not
 }
 
 // Create note
-func CreateNote(note models.Note, ctx context.Context, tx *sql.Tx) (models.Note, error) {
-	return CreateNoteTx(note, ctx, tx)
+func CreateNote(note models.Note, ctx context.Context) (models.Note, error) {
+	return CreateNoteTx(note, ctx, nil)
 }
 
 // Update notes transaction
@@ -50,8 +59,8 @@ func UpdateNoteTx(note models.Note, ctx context.Context, tx *sql.Tx) (models.Not
 }
 
 // Update note
-func UpdateNote(note models.Note, ctx context.Context, tx *sql.Tx) (models.Note, error) {
-	return UpdateNoteTx(note, ctx, tx)
+func UpdateNote(note models.Note, ctx context.Context) (models.Note, error) {
+	return UpdateNoteTx(note, ctx, nil)
 }
 
 // Delete note

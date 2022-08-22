@@ -42,6 +42,27 @@ func (r *queryResolver) Notes(ctx context.Context, pagination *gqlmodels.NotesPa
 	}, nil
 }
 
+// AllNotes is the resolver for the allNotes field.
+func (r *queryResolver) AllNotes(ctx context.Context, pagination *gqlmodels.NotesPagination) (*gqlmodels.NotesPayload, error) {
+	queryMods := []qm.QueryMod{}
+	// If pagination is enabled
+	if pagination != nil {
+		if pagination.Limit != 0 {
+			// Add a new query specifying the page limit & the offset
+			queryMods = append(queryMods, qm.Limit(pagination.Limit), qm.Offset(pagination.Page*pagination.Limit))
+		}
+	}
+
+	notes, count, err := daos.GetNotesWithCount(queryMods, ctx)
+	if err != nil {
+		return nil, resultwrapper.ResolverSQLError(err, "data")
+	}
+	return &gqlmodels.NotesPayload{
+		Total: int(count),
+		Notes: convert.NotesToGraphqlNotes(notes),
+	}, nil
+}
+
 // Query returns gqlmodels.QueryResolver implementation.
 func (r *Resolver) Query() gqlmodels.QueryResolver { return &queryResolver{r} }
 

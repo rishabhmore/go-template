@@ -59,7 +59,7 @@ type ComplexityRoot struct {
 		CreateNote     func(childComplexity int, input NotesCreateInput) int
 		CreateRole     func(childComplexity int, input RoleCreateInput) int
 		CreateUser     func(childComplexity int, input UserCreateInput) int
-		DeleteNote     func(childComplexity int) int
+		DeleteNote     func(childComplexity int, id string) int
 		DeleteUser     func(childComplexity int) int
 		Login          func(childComplexity int, username string, password string) int
 		RefreshToken   func(childComplexity int, token string) int
@@ -89,9 +89,10 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
-		Me    func(childComplexity int) int
-		Notes func(childComplexity int, pagination *NotesPagination) int
-		Users func(childComplexity int, pagination *UserPagination) int
+		AllNotes func(childComplexity int, pagination *NotesPagination) int
+		Me       func(childComplexity int) int
+		Notes    func(childComplexity int, pagination *NotesPagination) int
+		Users    func(childComplexity int, pagination *UserPagination) int
 	}
 
 	RefreshTokenResponse struct {
@@ -171,7 +172,7 @@ type MutationResolver interface {
 	RefreshToken(ctx context.Context, token string) (*RefreshTokenResponse, error)
 	CreateNote(ctx context.Context, input NotesCreateInput) (*Notes, error)
 	UpdateNote(ctx context.Context, input *NotesUpdateInput) (*Notes, error)
-	DeleteNote(ctx context.Context) (*NotesDelete, error)
+	DeleteNote(ctx context.Context, id string) (*NotesDelete, error)
 	CreateRole(ctx context.Context, input RoleCreateInput) (*RolePayload, error)
 	CreateUser(ctx context.Context, input UserCreateInput) (*User, error)
 	UpdateUser(ctx context.Context, input *UserUpdateInput) (*User, error)
@@ -179,6 +180,7 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Notes(ctx context.Context, pagination *NotesPagination) (*NotesPayload, error)
+	AllNotes(ctx context.Context, pagination *NotesPagination) (*NotesPayload, error)
 	Me(ctx context.Context) (*User, error)
 	Users(ctx context.Context, pagination *UserPagination) (*UsersPayload, error)
 }
@@ -275,7 +277,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			break
 		}
 
-		return e.complexity.Mutation.DeleteNote(childComplexity), true
+		args, err := ec.field_Mutation_deleteNote_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.DeleteNote(childComplexity, args["id"].(string)), true
 
 	case "Mutation.deleteUser":
 		if e.complexity.Mutation.DeleteUser == nil {
@@ -415,6 +422,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.NotesPayload.Total(childComplexity), true
+
+	case "Query.allNotes":
+		if e.complexity.Query.AllNotes == nil {
+			break
+		}
+
+		args, err := ec.field_Query_allNotes_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.AllNotes(childComplexity, args["pagination"].(*NotesPagination)), true
 
 	case "Query.me":
 		if e.complexity.Query.Me == nil {
@@ -880,6 +899,7 @@ input NotesCreateInput {
 
 """Update a note for a user"""
 input NotesUpdateInput {
+    id: ID!
     title: String
     note: String
 }
@@ -897,10 +917,11 @@ type NotesDelete {
 	{Name: "../schema/notes_mutations.graphql", Input: `extend type Mutation {
     createNote(input: NotesCreateInput!): Notes!
     updateNote(input: NotesUpdateInput): Notes!
-    deleteNote: NotesDelete
+    deleteNote(id: ID!): NotesDelete
 }`, BuiltIn: false},
 	{Name: "../schema/notes_queries.graphql", Input: `extend type Query {
     notes(pagination: NotesPagination): NotesPayload!
+    allNotes(pagination: NotesPagination): NotesPayload!
 }`, BuiltIn: false},
 	{Name: "../schema/role.graphql", Input: `type Role {
     id: ID!
@@ -1158,6 +1179,21 @@ func (ec *executionContext) field_Mutation_createUser_args(ctx context.Context, 
 	return args, nil
 }
 
+func (ec *executionContext) field_Mutation_deleteNote_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
 func (ec *executionContext) field_Mutation_login_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -1239,6 +1275,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_allNotes_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 *NotesPagination
+	if tmp, ok := rawArgs["pagination"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("pagination"))
+		arg0, err = ec.unmarshalONotesPagination2ᚖgoᚑtemplateᚋgqlmodelsᚐNotesPagination(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["pagination"] = arg0
 	return args, nil
 }
 
@@ -1785,7 +1836,7 @@ func (ec *executionContext) _Mutation_deleteNote(ctx context.Context, field grap
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteNote(rctx)
+		return ec.resolvers.Mutation().DeleteNote(rctx, fc.Args["id"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1812,6 +1863,17 @@ func (ec *executionContext) fieldContext_Mutation_deleteNote(ctx context.Context
 			}
 			return nil, fmt.Errorf("no field named %q was found under type NotesDelete", field.Name)
 		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_deleteNote_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
 	}
 	return fc, nil
 }
@@ -2683,6 +2745,67 @@ func (ec *executionContext) fieldContext_Query_notes(ctx context.Context, field 
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Query_notes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Query_allNotes(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_allNotes(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Query().AllNotes(rctx, fc.Args["pagination"].(*NotesPagination))
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*NotesPayload)
+	fc.Result = res
+	return ec.marshalNNotesPayload2ᚖgoᚑtemplateᚋgqlmodelsᚐNotesPayload(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_allNotes(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "notes":
+				return ec.fieldContext_NotesPayload_notes(ctx, field)
+			case "total":
+				return ec.fieldContext_NotesPayload_total(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type NotesPayload", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_allNotes_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return
 	}
@@ -6710,13 +6833,21 @@ func (ec *executionContext) unmarshalInputNotesUpdateInput(ctx context.Context, 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"title", "note"}
+	fieldsInOrder := [...]string{"id", "title", "note"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			it.ID, err = ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
 		case "title":
 			var err error
 
@@ -7934,6 +8065,29 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_notes(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx, innerFunc)
+			}
+
+			out.Concurrently(i, func() graphql.Marshaler {
+				return rrm(innerCtx)
+			})
+		case "allNotes":
+			field := field
+
+			innerFunc := func(ctx context.Context) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_allNotes(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&invalids, 1)
 				}

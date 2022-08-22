@@ -1,3 +1,4 @@
 extend type Query {
     notes(pagination: NotesPagination): NotesPayload!
+    allNotes(pagination: NotesPagination): NotesPayload!
 }

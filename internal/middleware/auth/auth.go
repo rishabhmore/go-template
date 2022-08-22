@@ -78,7 +78,7 @@ var WhiteListedOperations = map[string][]string{
 // AdminOperations...
 var AdminOperations = map[string][]string{
 	// TODO Add "allNotes" operation to admin only operations?
-	"query": {"users"},
+	"query": {"users", "allNotes"},
 }
 
 func contains(s []string, e string) bool {
